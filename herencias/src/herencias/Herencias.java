@@ -13,6 +13,7 @@ public class Herencias {
     /**
      * @param args the command line arguments
      */
+    //ANGILI RELINA PALACIOS GOMEZ 6261135
     public static void main(String[] args) {
          main.main(args);
     }
