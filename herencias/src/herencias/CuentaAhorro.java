@@ -3,26 +3,77 @@ package herencias;
 import java.util.Calendar;
 
 public class CuentaAhorro extends CuentaBancaria {
-    private Calendar ultimaModif;
-    private int retirosRealizados = 0;
-    private static final int MAX_RETIROS_MES = 3;
+     private Calendar ultimoUso;
 
-    public CuentaAhorro(int cuenta, String cliente) {
-        super(cuenta, cliente, 0.03);
-        this.ultimaModif = Calendar.getInstance();
+    public CuentaAhorro(int numero, String cliente, String moneda) {
+        super(numero, cliente, moneda, TipoCuenta.AHORRO);
+        ultimoUso = Calendar.getInstance();
+    }
+
+    // Constructor para conservar la forma de creación anterior.
+    public CuentaAhorro(int numero, String cliente) {
+        this(numero, cliente, "Lps");
     }
 
     public boolean status() {
-        Calendar fechaActual = Calendar.getInstance();
-        fechaActual.add(Calendar.MONTH, -6);
-        return ultimaModif.after(fechaActual);
+
+        Calendar fechaLimite = Calendar.getInstance();
+        fechaLimite.add(Calendar.MONTH, -6);
+        return ultimoUso != null && !ultimoUso.before(fechaLimite);
     }
 
-    public void aplicarIntereses() {
-        if (status()) {
-            double interes = saldo * tasa;
-            depositar(interes);
-            historial.add("Intereses aplicados: " + interes);
+    private void verificarActiva() {
+
+        if (!status()) {
+            throw new IllegalStateException(
+                    "La cuenta de ahorro está inactiva");
         }
+    }
+
+    @Override
+    public void depositar(double monto) {
+        verificarActiva();
+        super.depositar(monto);
+        ultimoUso = Calendar.getInstance();
+    }
+
+    @Override
+    public boolean retirar(double monto) {
+        verificarActiva();
+        boolean realizado = super.retirar(monto);
+        if (realizado) {
+            ultimoUso = Calendar.getInstance();
+        }
+        return realizado;
+    }
+
+    @Override
+    public void reintegrar(double monto) {
+        super.reintegrar(monto);
+        ultimoUso = Calendar.getInstance();
+    }
+
+    @Override
+    public void registrarIntereses() {
+        verificarActiva();
+        super.registrarIntereses();
+    }
+
+    
+    public void aplicarIntereses() {
+        registrarIntereses();
+    }
+
+    @Override
+    public void quienSoy() {
+        System.out.println("Soy una CuentaAhorro");
+    }
+
+    @Override
+    public String toString() {
+
+        return super.toString()
+                + " Estado: "
+                + (status() ? "Activa" : "Inactiva");
     }
 }
