@@ -1,83 +1,175 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package herencias;
 
 import java.util.Calendar;
-import java.util.ArrayList;
-/**
- *
- * @author ANGILI PALACIOS
- */
-public class CuentaBancaria {
-    //atributos
-    
-    protected int numero;
-    protected String cliente;
-    protected double saldo;
-    protected double tasa;
-    protected Calendar creacion;
-    protected ArrayList<String> historial;
 
-    public CuentaBancaria(int numero, String cliente,  double tasa) {
+public class CuentaBancaria {
+
+    protected int numero;
+    protected double saldo;
+    protected String cliente;
+    protected String moneda;
+    protected TipoCuenta tipo;
+    protected Calendar apertura;
+
+    protected String[] historial = new String[50];
+    protected int cantidadMovimientos = 0;
+
+    public CuentaBancaria(int numero, String cliente, String moneda) {
+        this(numero, cliente, moneda, TipoCuenta.CHEQUES);
+    }
+
+    public CuentaBancaria(int numero, String cliente,String moneda, TipoCuenta tipo) {
+        if (cliente == null || cliente.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre del cliente no puede estar vacío");
+        }
+        if (moneda == null || moneda.trim().isEmpty()) {
+            throw new IllegalArgumentException("La moneda no puede estar vacía");
+        }
+
+        if (tipo == null) {
+            throw new IllegalArgumentException( "El tipo de cuenta no puede ser nulo");
+        }
+
         this.numero = numero;
         this.cliente = cliente;
-        this.saldo = 500;
-        this.tasa = tasa;
-        this.creacion = Calendar.getInstance();
-        this.historial = new ArrayList<>();
-        this.historial.add("Cuenta creada con saldo incial de 500 Lps. ");
+        this.moneda = moneda;
+        this.tipo = tipo;
+        this.saldo = 0;
+        this.apertura = Calendar.getInstance();
+
+        registrarMovimiento("cuenta creada su saldo: " + saldo);
     }
-    
-    public void depositar(double monto){
-        try{
-        if(monto<=0){
-            System.out.println("Insuficiente saldo ");
-        }else{
-            saldo += monto;
-            historial.add("Deposito: "+monto);
+
+    public void depositar(double monto) {
+
+        if (monto <= 0 || !Double.isFinite(monto)) {
+            throw new IllegalArgumentException( "El depósito debe ser mayor que cero");
         }
-        }
-            catch(Exception e){
-                System.out.println(e.getMessage());
-                    
-                    }
+        saldo += monto;
+        registrarMovimiento("deposito+" + monto + " su  saldoes: " + saldo);
     }
-        public boolean retirar(double monto){
-            if(monto>00 && saldo >= monto){
-                saldo-=monto;
-                historial.add("Retiro: - "+monto);
-                return true;
-            }
-            historial.add("intento de retiro fallido "+monto);
+
+    public boolean retirar(double monto) {
+        if (monto <= 0 || !Double.isFinite(monto)) {
+            throw new IllegalArgumentException("El retiro debe ser mayor que cero");
+        }
+        if (monto > saldo) {
             return false;
-        
-        
+        }
+        saldo -= monto;
+        registrarMovimiento("RETIRO -" + monto + " -> saldo: " + saldo);
+
+        return true;
     }
-        public void mostrarHistorial(){
-            System.out.println("===== HISTORIAL DE "+cliente.toUpperCase()+"=======");
-            for(String registro:historial)
-               System.out.println(registro);
+
+    public void reintegrar(double monto) {
+        if (monto <= 0 || !Double.isFinite(monto)) {
+            throw new IllegalArgumentException("El reintegro debe ser mayor que cero");
         }
-        
-        public double getSaldo(){
-            return saldo;
+        saldo += monto;
+        registrarMovimiento("REVERSA +" + monto + " saldo: " + saldo);
+    }
+
+    public void registrarIntereses() {
+        double interes = saldo * tipo.tasa();
+        if (interes != 0) {
+            saldo += interes;
+            registrarMovimiento( "INTERESES +" + interes + " -> saldo: " + saldo);
         }
-        public String ToStrig(){
-            return String.format("Cuenta #%d |%s | $%.2f",numero,cliente,saldo);
-        }
-        public void tranferir (double monto,CuentaBancaria destino){
-            if(this.retirar(monto)){
-                destino.retirar(monto);
-                this.historial.add("Tranferencia enviada a "+destino.numero + monto);
-                
-                
-            }else{
-                System.out.println("Tranferencia fallida");
+    }
+
+    public void registrarMovimiento(String linea) {
+        try {
+            if (cantidadMovimientos >= historial.length) {
+                throw new IllegalStateException(
+                        "El historial está lleno");
             }
+            historial[cantidadMovimientos] = linea;
+            cantidadMovimientos++;
+
+        } catch (IllegalStateException e) {
+            System.out.println(
+                    "Aviso: " + e.getMessage()
+                    + ". La operación bancaria se completó, "
+                    + "pero no se registró el movimiento.");
         }
-                
-       
-       
+    }
+
+    public void imprimirHistorial() {
+
+        System.out.println("hoistorial de "+ cliente.toUpperCase() );
+        for (int i = 0; i < cantidadMovimientos; i++) {
+            System.out.println(historial[i]);
+        }
+    }
+
+    public void mostrarHistorial() {
+        imprimirHistorial();
+    }
+
+    public void quienSoy() {
+        System.out.println("CuentaBancaria (clase base)");
+    }
+
+    public int getNumero() {
+        return numero;
+    }
+
+    public double getSaldo() {
+        return saldo;
+    }
+
+    public String getCliente() {
+        return cliente;
+    }
+
+    public String getMoneda() {
+        return moneda;
+    }
+
+    public TipoCuenta getTipo() {
+        return tipo;
+    }
+
+    @Override
+    public String toString() {
+
+        return String.format( "Cuenta #%d | Cliente: %s | Saldo: %.2f %s" + " | Tipo: %s | Apertura: %s",numero, cliente, saldo, moneda,tipo, apertura.getTime());
+    }
+
+    
+    public String ToStrig() {
+        return toString();
+    }
+    public void tranferir(double monto, CuentaBancaria destino) {
+
+        try {
+            if (destino == null || destino == this) {
+                throw new IllegalArgumentException(
+                        "La cuenta de destino no es válida");
+            }
+
+            if (!retirar(monto)) {
+                throw new IllegalStateException(
+                        "Saldo insuficiente para transferir");
+            }
+
+            try {
+                destino.depositar(monto);
+
+            } catch (IllegalArgumentException
+                    | IllegalStateException e) {
+
+                reintegrar(monto);
+                throw e;
+            }
+
+        } catch (IllegalArgumentException
+                | IllegalStateException e) {
+
+            System.out.println("Transferencia fallida: "
+                    + e.getMessage());
+        }
+    }
 }
