@@ -1,6 +1,10 @@
 
 package herencias;
-
+/**
+ *
+ * @author ANGILI PALACIOS
+ */
+//ANGILI RELINA PALCIOS 6261135
 import java.util.Calendar;
 
 public class CuentaBancaria {
